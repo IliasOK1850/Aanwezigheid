@@ -1,0 +1,773 @@
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aanwezigheidsregistratie</title>
+    <style>
+        @font-face {
+            font-family: 'Qanelas Soft';
+            src: local('Qanelas Soft');
+            /* Hier kun je een link naar het lettertype toevoegen als je het hebt */
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Qanelas Soft', Arial, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            background-color: #fff;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        input, select, button {
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .dropdown {
+            position: absolute;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            z-index: 100;
+            display: none;
+        }
+        
+        .dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .returnee {
+            background-color: #e6f7ff;
+        }
+        
+        .stats-box {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-container input {
+            margin-right: 5px;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-radius: 0;
+                margin-right: 0;
+                margin-bottom: 2px;
+            }
+            
+            .tab.active {
+                border-bottom: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aanwezigheidsregistratie</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="register">Registreren</div>
+            <div class="tab" data-tab="view">Overzicht</div>
+            <div class="tab" data-tab="export">Exporteren</div>
+            <div class="tab" data-tab="settings">Instellingen</div>
+        </div>
+        
+        <div id="register" class="tab-content active">
+            <div class="stats-box">
+                <h3>Statistieken vandaag</h3>
+                <p>Totaal aanwezigen: <span id="total-attendees">0</span></p>
+                <p>Nieuwe bezoekers: <span id="new-visitors">0</span></p>
+                <p>Terugkerende bezoekers: <span id="returning-visitors">0</span></p>
+            </div>
+            
+            <h2>Nieuwe aanwezigheid</h2>
+            <div class="form-group">
+                <label for="firstName">Voornaam:</label>
+                <input type="text" id="firstName" placeholder="Voornaam" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="age">Leeftijd:</label>
+                <input type="number" id="age" placeholder="Leeftijd" min="0" max="120" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="city">Gemeente:</label>
+                <div class="search-container">
+                    <input type="text" id="city" placeholder="Begin te typen..." autocomplete="off">
+                    <div id="cityDropdown" class="dropdown"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Datum:</label>
+                <input type="date" id="date" required>
+            </div>
+            
+            <div class="form-group checkbox-container">
+                <input type="checkbox" id="returneeCheck">
+                <label for="returneeCheck">Al eerder aanwezig geweest</label>
+            </div>
+            
+            <button id="saveAttendance">Opslaan</button>
+            
+            <h3>Vandaag geregistreerd</h3>
+            <table id="todayAttendees">
+                <thead>
+                    <tr>
+                        <th>Voornaam</th>
+                        <th>Leeftijd</th>
+                        <th>Gemeente</th>
+                        <th>Status</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Wordt dynamisch gevuld -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="view" class="tab-content">
+            <h2>Overzicht aanwezigheden</h2>
+            
+            <div class="form-group">
+                <label for="filterDate">Filter op datum:</label>
+                <input type="date" id="filterDate">
+                <button id="applyFilter">Toepassen</button>
+                <button id="clearFilter">Wissen</button>
+            </div>
+            
+            <table id="allAttendees">
+                <thead>
+                    <tr>
+                        <th>Voornaam</th>
+                        <th>Leeftijd</th>
+                        <th>Gemeente</th>
+                        <th>Datum</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Wordt dynamisch gevuld -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="export" class="tab-content">
+            <h2>Exporteer naar Excel</h2>
+            
+            <div class="form-group">
+                <label for="exportStartDate">Startdatum:</label>
+                <input type="date" id="exportStartDate">
+            </div>
+            
+            <div class="form-group">
+                <label for="exportEndDate">Einddatum:</label>
+                <input type="date" id="exportEndDate">
+            </div>
+            
+            <div class="form-group checkbox-container">
+                <input type="checkbox" id="exportNewOnly">
+                <label for="exportNewOnly">Alleen nieuwe bezoekers</label>
+            </div>
+            
+            <button id="exportExcel">Exporteren</button>
+        </div>
+        
+        <div id="settings" class="tab-content">
+            <h2>Instellingen</h2>
+            
+            <div class="form-group">
+                <label for="municipalitiesFile">Upload gemeentelijst (CSV):</label>
+                <input type="file" id="municipalitiesFile" accept=".csv">
+                <button id="uploadMunicipalities">Uploaden</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="defaultDate">Standaard datum:</label>
+                <select id="defaultDate">
+                    <option value="today">Vandaag</option>
+                    <option value="custom">Aangepast</option>
+                </select>
+                <input type="date" id="customDefaultDate" style="display:none;">
+            </div>
+            
+            <div class="form-group">
+                <button id="clearData">Alle gegevens wissen</button>
+                <p><small>Let op: Dit wist alle aanwezigheidssgegevens. Deze actie kan niet ongedaan gemaakt worden.</small></p>
+            </div>
+            
+            <div class="form-group">
+                <button id="backupData">Backup maken</button>
+                <button id="restoreData">Backup terugzetten</button>
+                <input type="file" id="restoreFile" accept=".json" style="display:none;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // De lijst met Belgische gemeenten (wordt vervangen door de geüploade CSV)
+        let municipalities = [
+            "Antwerpen", "Gent", "Brugge", "Leuven", "Mechelen", "Aalst", "Hasselt", 
+            "Sint-Niklaas", "Kortrijk", "Oostende", "Turnhout", "Roeselare", "Genk"
+        ];
+        
+        // Lokale opslag van aanwezigheden
+        let attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || [];
+        
+        // Huidige datum instellen
+        const today = new Date();
+        const formattedToday = today.toISOString().split('T')[0];
+        document.getElementById('date').value = formattedToday;
+        
+        // Tabs functionaliteit
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Actieve tab verwijderen
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Nieuwe tab activeren
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+                
+                // Specifieke acties per tab
+                if (tabId === 'view') {
+                    renderAllAttendees();
+                } else if (tabId === 'register') {
+                    renderTodayAttendees();
+                    updateStatistics();
+                }
+            });
+        });
+        
+        // Gemeente dropdown
+        const cityInput = document.getElementById('city');
+        const cityDropdown = document.getElementById('cityDropdown');
+        
+        cityInput.addEventListener('input', () => {
+            const value = cityInput.value.toLowerCase();
+            const filteredCities = municipalities.filter(city => 
+                city.toLowerCase().includes(value)
+            );
+            
+            renderCityDropdown(filteredCities);
+            
+            if (value && filteredCities.length > 0) {
+                cityDropdown.style.display = 'block';
+            } else {
+                cityDropdown.style.display = 'none';
+            }
+        });
+        
+        cityInput.addEventListener('blur', () => {
+            // Kleine vertraging om selectie toe te staan
+            setTimeout(() => {
+                cityDropdown.style.display = 'none';
+            }, 200);
+        });
+        
+        cityInput.addEventListener('focus', () => {
+            if (cityInput.value) {
+                const value = cityInput.value.toLowerCase();
+                const filteredCities = municipalities.filter(city => 
+                    city.toLowerCase().includes(value)
+                );
+                
+                renderCityDropdown(filteredCities);
+                
+                if (filteredCities.length > 0) {
+                    cityDropdown.style.display = 'block';
+                }
+            }
+        });
+        
+        function renderCityDropdown(cities) {
+            cityDropdown.innerHTML = '';
+            
+            cities.slice(0, 10).forEach(city => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.textContent = city;
+                item.addEventListener('click', () => {
+                    cityInput.value = city;
+                    cityDropdown.style.display = 'none';
+                });
+                cityDropdown.appendChild(item);
+            });
+        }
+        
+        // Aanwezigheid opslaan
+        document.getElementById('saveAttendance').addEventListener('click', () => {
+            const firstName = document.getElementById('firstName').value;
+            const age = document.getElementById('age').value;
+            const city = document.getElementById('city').value;
+            const date = document.getElementById('date').value;
+            const isReturnee = document.getElementById('returneeCheck').checked;
+            
+            if (!firstName || !age || !city || !date) {
+                alert('Vul alle verplichte velden in.');
+                return;
+            }
+            
+            const newAttendance = {
+                id: Date.now(), // Unieke ID
+                firstName,
+                age: parseInt(age),
+                city,
+                date,
+                isReturnee,
+                timestamp: new Date().toISOString()
+            };
+            
+            attendanceData.push(newAttendance);
+            saveAttendanceData();
+            
+            // Formulier resetten
+            document.getElementById('firstName').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('returneeCheck').checked = false;
+            
+            renderTodayAttendees();
+            updateStatistics();
+            
+            alert('Aanwezigheid opgeslagen!');
+        });
+        
+        // Gegevens in lokale opslag bewaren
+        function saveAttendanceData() {
+            localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+        }
+        
+        // Registraties van vandaag weergeven
+        function renderTodayAttendees() {
+            const todayAttendees = attendanceData.filter(a => a.date === formattedToday);
+            const tbody = document.querySelector('#todayAttendees tbody');
+            tbody.innerHTML = '';
+            
+            todayAttendees.forEach(attendee => {
+                const tr = document.createElement('tr');
+                if (attendee.isReturnee) {
+                    tr.classList.add('returnee');
+                }
+                
+                tr.innerHTML = `
+                    <td>${attendee.firstName}</td>
+                    <td>${attendee.age}</td>
+                    <td>${attendee.city}</td>
+                    <td>${attendee.isReturnee ? 'Terugkerend' : 'Nieuw'}</td>
+                    <td>
+                        <button data-id="${attendee.id}" class="delete-btn">Verwijderen</button>
+                        <button data-id="${attendee.id}" class="edit-btn">Bewerken</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Event listeners voor verwijderen en bewerken toevoegen
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    deleteAttendance(id);
+                });
+            });
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    editAttendance(id);
+                });
+            });
+        }
+        
+        // Alle aanwezigheden weergeven
+        function renderAllAttendees(filterDate = null) {
+            let filteredData = attendanceData;
+            
+            if (filterDate) {
+                filteredData = attendanceData.filter(a => a.date === filterDate);
+            }
+            
+            // Sorteren op datum (nieuwste eerst)
+            filteredData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const tbody = document.querySelector('#allAttendees tbody');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach(attendee => {
+                const tr = document.createElement('tr');
+                if (attendee.isReturnee) {
+                    tr.classList.add('returnee');
+                }
+                
+                tr.innerHTML = `
+                    <td>${attendee.firstName}</td>
+                    <td>${attendee.age}</td>
+                    <td>${attendee.city}</td>
+                    <td>${formatDate(attendee.date)}</td>
+                    <td>${attendee.isReturnee ? 'Terugkerend' : 'Nieuw'}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Datum formatteren
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('nl-BE');
+        }
+        
+        // Aanwezigheid verwijderen
+        function deleteAttendance(id) {
+            if (confirm('Weet je zeker dat je deze aanwezigheid wilt verwijderen?')) {
+                attendanceData = attendanceData.filter(a => a.id !== id);
+                saveAttendanceData();
+                renderTodayAttendees();
+                updateStatistics();
+            }
+        }
+        
+        // Aanwezigheid bewerken
+        function editAttendance(id) {
+            const attendee = attendanceData.find(a => a.id === id);
+            
+            if (attendee) {
+                document.getElementById('firstName').value = attendee.firstName;
+                document.getElementById('age').value = attendee.age;
+                document.getElementById('city').value = attendee.city;
+                document.getElementById('date').value = attendee.date;
+                document.getElementById('returneeCheck').checked = attendee.isReturnee;
+                
+                if (confirm('Gegevens geladen. Bewerk de velden en klik op Opslaan om te bevestigen. Doorgaan?')) {
+                    // Oude aanwezigheid verwijderen
+                    attendanceData = attendanceData.filter(a => a.id !== id);
+                    saveAttendanceData();
+                    renderTodayAttendees();
+                    updateStatistics();
+                }
+            }
+        }
+        
+        // Statistieken bijwerken
+        function updateStatistics() {
+            const todayAttendees = attendanceData.filter(a => a.date === formattedToday);
+            const totalToday = todayAttendees.length;
+            const newToday = todayAttendees.filter(a => !a.isReturnee).length;
+            const returningToday = todayAttendees.filter(a => a.isReturnee).length;
+            
+            document.getElementById('total-attendees').textContent = totalToday;
+            document.getElementById('new-visitors').textContent = newToday;
+            document.getElementById('returning-visitors').textContent = returningToday;
+        }
+        
+        // Filter toepassen op overzicht
+        document.getElementById('applyFilter').addEventListener('click', () => {
+            const filterDate = document.getElementById('filterDate').value;
+            renderAllAttendees(filterDate);
+        });
+        
+        // Filter wissen
+        document.getElementById('clearFilter').addEventListener('click', () => {
+            document.getElementById('filterDate').value = '';
+            renderAllAttendees();
+        });
+        
+        // Export naar Excel (CSV)
+        document.getElementById('exportExcel').addEventListener('click', () => {
+            const startDate = document.getElementById('exportStartDate').value;
+            const endDate = document.getElementById('exportEndDate').value;
+            const newOnly = document.getElementById('exportNewOnly').checked;
+            
+            let filteredData = attendanceData;
+            
+            // Datumfilters toepassen
+            if (startDate) {
+                filteredData = filteredData.filter(a => a.date >= startDate);
+            }
+            
+            if (endDate) {
+                filteredData = filteredData.filter(a => a.date <= endDate);
+            }
+            
+            // Filter op nieuwe bezoekers
+            if (newOnly) {
+                filteredData = filteredData.filter(a => !a.isReturnee);
+            }
+            
+            // Sorteren op datum
+            filteredData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // CSV maken
+            let csv = 'Voornaam,Leeftijd,Gemeente,Datum,Status\n';
+            
+            filteredData.forEach(attendee => {
+                const status = attendee.isReturnee ? 'Terugkerend' : 'Nieuw';
+                csv += `"${attendee.firstName}",${attendee.age},"${attendee.city}","${attendee.date}","${status}"\n`;
+            });
+            
+            // Downloaden
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            const filename = `aanwezigheden_${startDate || 'begin'}_tot_${endDate || 'eind'}.csv`;
+            
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+        
+        // Gemeenten uploaden via CSV
+        document.getElementById('uploadMunicipalities').addEventListener('click', () => {
+            const fileInput = document.getElementById('municipalitiesFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Selecteer eerst een CSV-bestand.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                // Veronderstelt dat het CSV-bestand één gemeente per regel heeft
+                municipalities = content.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                // Opslaan in lokale opslag
+                localStorage.setItem('municipalities', JSON.stringify(municipalities));
+                
+                alert(`${municipalities.length} gemeenten succesvol geladen.`);
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        // Alle gegevens wissen
+        document.getElementById('clearData').addEventListener('click', () => {
+            if (confirm('Weet je zeker dat je ALLE aanwezigheidsgegevens wilt wissen? Deze actie kan niet ongedaan gemaakt worden.')) {
+                attendanceData = [];
+                saveAttendanceData();
+                renderTodayAttendees();
+                renderAllAttendees();
+                updateStatistics();
+                alert('Alle gegevens zijn gewist.');
+            }
+        });
+        
+        // Backup maken
+        document.getElementById('backupData').addEventListener('click', () => {
+            const backupData = {
+                attendanceData,
+                municipalities,
+                version: '1.0',
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backupData)], { type: 'application/json' });
+            const link = document.createElement('a');
+            const filename = `aanwezigheidsapp_backup_${formattedToday}.json`;
+            
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+        
+        // Backup terugzetten
+        document.getElementById('restoreData').addEventListener('click', () => {
+            document.getElementById('restoreFile').click();
+        });
+        
+        document.getElementById('restoreFile').addEventListener('change', function() {
+            const file = this.files[0];
+            
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (backupData.attendanceData && Array.isArray(backupData.attendanceData)) {
+                        if (confirm('Weet je zeker dat je de backup wilt terugzetten? Huidige gegevens worden overschreven.')) {
+                            attendanceData = backupData.attendanceData;
+                            
+                            if (backupData.municipalities && Array.isArray(backupData.municipalities)) {
+                                municipalities = backupData.municipalities;
+                                localStorage.setItem('municipalities', JSON.stringify(municipalities));
+                            }
+                            
+                            saveAttendanceData();
+                            renderTodayAttendees();
+                            renderAllAttendees();
+                            updateStatistics();
+                            alert('Backup succesvol teruggezet.');
+                        }
+                    } else {
+                        alert('Ongeldig backup-bestand.');
+                    }
+                } catch (error) {
+                    alert('Fout bij het verwerken van het backup-bestand: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        // Standaard datum instelling
+        document.getElementById('defaultDate').addEventListener('change', function() {
+            const customDateInput = document.getElementById('customDefaultDate');
+            
+            if (this.value === 'custom') {
+                customDateInput.style.display = 'block';
+                customDateInput.value = formattedToday;
+            } else {
+                customDateInput.style.display = 'none';
+            }
+        });
+        
+        // Laden van opgeslagen gemeenten bij opstart
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedMunicipalities = localStorage.getItem('municipalities');
+            
+            if (savedMunicipalities) {
+                municipalities = JSON.parse(savedMunicipalities);
+            }
+            
+            renderTodayAttendees();
+            updateStatistics();
+        });
+    </script>
+</body>
+</html>
